@@ -1,0 +1,32 @@
+{
+    "notes": [
+        {
+            "id": "1",
+            "content": "content 1"
+        },
+        {
+            "id": "2",
+            "content": "content 2"
+        },
+        {
+            "id": "3",
+            "content": "content 3"
+        }
+    ],
+    "users": [
+        {
+            "id": 1,
+            "name": "admin",
+            "email": "",
+            "password": "admin",
+            "role": "admin"
+        },
+        {
+            "id": 2,
+            "name": "user",
+            "email": "",
+            "password": "user",
+            "role": "user"
+        }
+    ]
+}
