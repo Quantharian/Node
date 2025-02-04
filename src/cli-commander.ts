@@ -1,65 +1,86 @@
-import { join, resolve } from 'path';
+import { join, resolve } from 'node:path';
 import { program } from 'commander';
 import { RepoNoteFile } from './services/repo-notes.js';
 
-const dataBase = resolve('../data'); //dist/services
+const dataBase = resolve('../data'); // dist
 const file = join(dataBase, 'db.json');
 const repo = new RepoNoteFile(file);
 
-program.name('CLI').description('CLI sample').version('0.8.0');
+program.name('CLI').description(`CLI sample`).version('1.0.0');
 
 const readAll = async () => {
-    const data = await repo.read();
-    console.table(data);
-};
-
-program.command('all').description('Mostrar todas las notas').action(readAll);
-
-const findNote = async (key: string) => {
-    const data = await repo.read();
-    const note = data.find((note) => {
-        note.content.includes(key);
-    });
-    if (!note) {
-        console.log('Note not found');
-        return;
+    try {
+        const data = await repo.read();
+        console.table(data);
+    } catch (error) {
+        console.error((error as Error).message);
     }
-    console.table(note);
 };
 
-program
-    .command('find <key>')
-    .description('Mostrar las notas encontradas')
-    .action(findNote);
+const findNote = async (content: string) => {
+    try {
+        const data = await repo.read();
+        const notes = data.filter((note) => note.content.includes(content));
+        if (!notes.length) {
+            throw new Error('Nota no encontrada');
+        }
+        console.table(notes);
+    } catch (error) {
+        console.error((error as Error).message);
+    }
+};
 
 const addNote = async (content: string) => {
     const newNote = { content: content };
-    const finalNote = await repo.create(newNote);
-    console.log('Nota añadida', finalNote);
+    try {
+        const finalNote = await repo.create(newNote);
+        console.log('Nota añadida', finalNote);
+    } catch (error) {
+        console.error((error as Error).message);
+    }
 };
-
-program.command('add <note>').description('Añadir una nota').action(addNote);
 
 const updateNote = async (content: string, { id }: { id: string }) => {
     const updatedNote = { content: content };
-    const finalNote = await repo.update(id, updatedNote);
-    console.log('Nota añadida', finalNote);
+    try {
+        const finalNote = await repo.update(id, updatedNote);
+        console.log('Nota actualizada', finalNote);
+    } catch (error) {
+        if (error instanceof Error) {
+            console.error(error.message);
+        } else {
+            console.error('Error desconocido', error);
+        }
+    }
 };
-
-program
-    .command('update <note>')
-    .description('Actualizar nota dando su id')
-    .option('--id -i <id')
-    .action(updateNote);
-// program.command('update <id> <note>');
 
 const deleteNote = async ({ id }: { id: string }) => {
-    const deletedNote = await repo.delete(id);
-    console.log('Nota borrada', deletedNote);
+    try {
+        const deletedNote = await repo.delete(id);
+        console.log('Nota borrada', deletedNote);
+    } catch (error) {
+        console.error((error as Error).message);
+    }
 };
 
-program.command('delete <id>').option('--id -i <id').action(deleteNote);
+program.command('all').description('Mostrar todas las notas').action(readAll);
+// .action(() => {
+//     repo.read().then((data) => {
+//         console.table(data);
+//     });
+// });
 
-program.command('help');
+program
+    // .command('find <key>')
+    .command('find')
+    .argument('<key>', 'texto para buscar la nota')
+    .description('Mostrar las notas encontradas')
+    .action(findNote);
+
+program.command('add <note>').description('Añadir una nota').action(addNote);
+
+program.command('update <note>').option('-i, --id <id>').action(updateNote);
+
+program.command('delete').option('-i, --id <id>').action(deleteNote);
 
 program.parse();
